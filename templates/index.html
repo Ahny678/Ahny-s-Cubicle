@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div>
+        <style>
+            h5{
+                color: red;
+            }
+        </style>
+        {% for message in messages %}
+        <h5>{{message}}</h5>
+        {% endfor %}
+    </div>
+    <form method="POST" action="">
+        {% csrf_token %}
+        <input type="text" id="message" name="message">
+        <input type="submit" name="Submit">
+    </form>
+</body>
+</html>

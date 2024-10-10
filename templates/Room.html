@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Room Page</title>
+<style>
+body {
+font-family: Arial, sans-serif;
+background-color: #000; /* Black background */
+color: #fff; /* White text */
+margin: 0;
+padding: 0;
+display: flex;
+justify-content: center;
+align-items: center;
+height: 100vh;
+} 
+
+.room-container {
+width: 400px;
+padding: 20px;
+background-color: #1a1a1a; /* Dark gray for the container */
+border: 2px solid #ff4d4d; /* Red border */
+border-radius: 10px;
+box-shadow: 0 0 15px rgba(255, 0, 0, 0.3);
+} 
+
+h2, h5 {
+text-align: center;
+color: #ff4d4d;
+}
+
+.messages-container {
+background-color: #333; /* Darker gray for message display area */
+border: 2px solid #ff4d4d;
+border-radius: 5px;
+height: 200px;
+margin-bottom: 20px;
+padding: 10px;
+overflow-y: scroll; /* Enable scrolling for long messages */
+} 
+
+.form-group {
+margin-bottom: 20px;
+} 
+
+label {
+color: #ff4d4d;
+
+font-weight: bold;display: block;
+margin-bottom: 5px;
+} 
+
+textarea {
+width: 100%;
+padding: 10px;
+background-color: #1a1a1a;
+border: 2px solid #ff4d4d;
+color: white;
+border-radius: 5px;
+resize: none;
+height: 80px;
+} 
+
+input[type="submit"] {
+width: 100%;
+padding: 10px;
+background-color: #ff4d4d;
+color: white;
+border: none;
+border-radius: 5px;
+
+font-size: 16px;
+cursor: pointer;
+}input[type="submit"]:hover {
+background-color: #e60000;
+}
+</style>
+
+<script   src="https://code.jquery.com/jquery-3.1.1.min.js"   integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="   crossorigin="anonymous"></script>
+
+</head>
+<body>
+    
+<div class="room-container">
+<h2>{{chatroom}} Chat</h2>
+<!-- Message display container -->
+<div class="messages-container" id="messageDisplay">
+    
+<!-- Messages will be dynamically displayed here -->
+</div>
+
+<script>
+$(document).ready(function(){
+
+setInterval(function(){
+    $.ajax({
+        type: 'GET',  
+        url : "/getMessages/{{chatroom}}/",
+        success: function(response){
+            $("#messageDisplay").empty();
+            for (var key in response.messages)
+            {
+                var temp="<div class='container darker'><b><br>"+response.messages[key].user+"</b><p>"+response.messages[key].text+"</p><span class='time-left'>"+response.messages[key].date+"</span></div>";
+                $("#messageDisplay").append(temp);
+            }
+        },
+        error: function(response){
+            alert('An error occured')
+        }
+    });
+},1000);
+})
+</script>
+
+<div id="warning-container">
+    <!--for displaying warnings-->
+</div>
+
+<!-- Form for submitting messages -->
+<form id = "post-form">
+    {% csrf_token %}
+<div class="form-group">
+<label for="message">Message</label>
+<input type="hidden" name="username" id="username" value="{{username}}"/>
+<input type="hidden" name="room_name" id="room_name" value="{{chatroom_details.name}}"/>
+<textarea id="message" name="message" required></textarea>
+</div>
+<input type="submit" value="Upload">
+</form>
+</div>
+</body>
+
+<script>
+  $(document).on('submit', '#post-form', function(e) {
+    e.preventDefault();
+  
+    $.ajax({
+        type: 'POST',
+        url: '/chatChecker',  // This should match the URL for chatChecker view
+        data: {
+            message: $('#message').val(),
+            username: $('#username').val(),
+            csrfmiddlewaretoken: $('input[name=csrfmiddlewaretoken]').val(),
+        },
+        success: function(data){
+            // Check if there's a redirect
+            if (data.redirect_url) {
+                window.location.href = data.redirect_url;  // Redirect if necessary
+            } else {
+                // Display Django messages in the page
+                var messageContainer = $("#warning-container"); // Make sure this is where you want to display messages
+                messageContainer.empty();  // Clear any previous messages
+
+                // Loop over messages and append them to the message container
+                for (var i = 0; i < data.messages.length; i++) {
+                    messageContainer.append('<p>' + data.messages[i] + '</p>');
+                }
+            }
+        },
+        error: function(xhr, status, error) {
+            alert('Error: ' + error);  // Handle any errors that occur
+        }
+    });
+  
+    //document.getElementById('message').value = '';
+});
+
+</script>
+
+<script type="text/javascript">
+  
+    $(document).on('submit','#post-form',function(e){
+      e.preventDefault();
+  
+      $.ajax({
+        type:'POST',
+        url:'/PostMessages',
+        data:{
+            username:$('#username').val(),
+            room_name:$('#room_name').val(),
+            message:$('#message').val(),
+          csrfmiddlewaretoken:$('input[name=csrfmiddlewaretoken]').val(),
+        },
+        success: function(data){
+          // alert(data)
+        }
+      });
+      document.getElementById('message').value = ''
+    });
+    
+  </script>
+</html>
